@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 require 'rubygems'
-gem 'activerecord', '~> 3.0.0'
+gem 'activerecord', '~> 3.1.0.beta'
 require 'active_record'
 require 'test/unit'
 require 'active_support/core_ext/logger'
@@ -184,7 +184,7 @@ class DefaultValuePluginTest < Test::Unit::TestCase
 
 	def test_doesnt_conflict_with_overrided_initialize_method_in_model_class
 		define_model_class do
-			def initialize(attrs = {})
+			def initialize(attrs = {}, options = {})
 				@initialized = true
 				super(:count => 5678)
 			end

@@ -73,25 +73,24 @@ module DefaultValueFor
 	end
 
 	module InstanceMethods
-		def initialize_with_defaults(attrs = nil)
-			initialize_without_defaults(attrs) do
-				if attrs
-					stringified_attrs = attrs.stringify_keys
-					safe_attrs = if respond_to? :sanitize_for_mass_assignment
-						sanitize_for_mass_assignment(stringified_attrs)
-					else
-						remove_attributes_protected_from_mass_assignment(stringified_attrs)
-					end
-					safe_attribute_names = safe_attrs.keys.map do |x|
-						x.to_s
-					end
-				end
-				self.class._default_attribute_values.each do |attribute, container|
-					if safe_attribute_names.nil? || !safe_attribute_names.any? { |attr_name| attr_name =~ /^#{attribute}($|\()/ }
-						__send__("#{attribute}=", container.evaluate(self))
-						changed_attributes.delete(attribute)
-					end
-				end
+		def initialize_with_defaults(attrs = nil, options = {})
+			initialize_without_defaults(attrs, options) do
+			  if attrs.present?
+  			  sanitizer    = mass_assignment_authorizer((options && options[:as]) || :default)
+			    allowed_keys = []
+
+  			  keys = attrs.keys.each do |key|
+  			    key = key.to_s
+  			    allowed_keys << key unless sanitizer.deny?(key)
+  			  end
+			  end
+			  self.class._default_attribute_values.each_pair do |attribute, container|
+			    multi_attribute = "#{attribute}("
+			    if !allowed_keys || allowed_keys.none? {|key| key == attribute || key.start_with?(multi_attribute)}
+			      __send__("#{attribute}=", container.evaluate(self))
+			      changed_attributes.delete(attribute)
+		      end
+			  end
 				yield(self) if block_given?
 			end
 		end
