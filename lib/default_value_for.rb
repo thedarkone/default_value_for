@@ -50,15 +50,15 @@ module DefaultValueFor
 			if !method_defined?(:initialize_with_defaults)
 				include(InstanceMethods)
 				alias_method_chain :initialize, :defaults
-				class_inheritable_accessor :_default_attribute_values
-				self._default_attribute_values = ActiveSupport::OrderedHash.new
+				class_attribute :_default_attribute_values
+				self._default_attribute_values ||= ActiveSupport::OrderedHash.new
 			end
 			if block_given?
 				container = BlockValueContainer.new(block)
 			else
 				container = NormalValueContainer.new(value)
 			end
-			_default_attribute_values[attribute.to_s] = container
+			self._default_attribute_values = _default_attribute_values.merge(attribute.to_s => container)
 		end
 
 		def default_values(values)
